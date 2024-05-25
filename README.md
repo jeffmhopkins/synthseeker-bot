@@ -7,5 +7,7 @@ apt install wget
 wget -O dpp.deb https://dl.dpp.dev/
 dpkg -i dpp.deb
 
-g++ bot.cpp -o mybot -ldpp
+git clone https://github.com/jeffmhopkins/synthseeker-bot/
+cd synthseeker-bot
+make
 ```

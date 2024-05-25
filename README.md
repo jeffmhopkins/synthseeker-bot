@@ -1,5 +1,5 @@
 # synthseeker-bot
-Discord Bot for ninjam server, will eventually stream audio from shoutcast stream into the voice channel and announce when people are live
+Discord Bot for ninjam server, announces when users join and leaves the server. NEEDS updated Channel, Role, and TOKEN values.
 
 Using dpp: https://dpp.dev/install-linux-deb.html
 ```

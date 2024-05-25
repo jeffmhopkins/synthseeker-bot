@@ -20,7 +20,7 @@ int main() {
 
     bot.on_slashcommand([&bot](const dpp::slashcommand_t & event) {
         if (event.command.get_command_name() == "info") {
-			event.reply(dpp::message("The Synthseeker NINJAM Server address is ninjam.synthseeker.onlin:2049").set_flags(dpp::m_ephemeral));
+			event.reply(dpp::message("The Synthseeker NINJAM Server address is ninjam.synthseeker.online:2049").set_flags(dpp::m_ephemeral));
         }
 		if (event.command.get_command_name() == "settings") {
             std::string announcement_enable = std::get<std::string>(event.get_parameter("announcements"));

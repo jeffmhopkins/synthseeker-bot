@@ -14,16 +14,16 @@ std::string ninjam_user_list_get = "";
 int get_status = 0;
 
 int main() {
-    dpp::cluster bot(discord_token);
+	dpp::cluster bot(discord_token);
 
-    bot.on_log(dpp::utility::cout_logger());
+	bot.on_log(dpp::utility::cout_logger());
 
-    bot.on_slashcommand([&bot](const dpp::slashcommand_t & event) {
-        if (event.command.get_command_name() == "info") {
+	bot.on_slashcommand([&bot](const dpp::slashcommand_t & event) {
+		if (event.command.get_command_name() == "info") {
 			event.reply(dpp::message("The Synthseeker NINJAM Server address is ninjam.synthseeker.online:2049").set_flags(dpp::m_ephemeral));
-        }
+        	}
 		if (event.command.get_command_name() == "settings") {
-            std::string announcement_enable = std::get<std::string>(event.get_parameter("announcements"));
+        		std::string announcement_enable = std::get<std::string>(event.get_parameter("announcements"));
 			if(announcement_enable == "announce_enable") {
 				event.reply(dpp::message("Channel announcements are now enabled.").set_flags(dpp::m_ephemeral));
 				allow_announcements = true;
@@ -32,27 +32,25 @@ int main() {
 				event.reply(dpp::message("Channel announcements are now disabled.").set_flags(dpp::m_ephemeral));
 				allow_announcements = false;
 			}
-        }
-    });
+		}
+	});
  
-    bot.on_ready([&bot](const dpp::ready_t& event) {
-	//if (dpp::run_once<struct clear_bot_commands>()) {
-        //    bot.global_bulk_command_delete();
-        //}
+	bot.on_ready([&bot](const dpp::ready_t& event) {
+		if (dpp::run_once<struct clear_bot_commands>()) {
+        		bot.global_bulk_command_delete();
+        	}
 		
-        if (dpp::run_once<struct register_bot_commands>()) {
-            bot.global_command_create(dpp::slashcommand("info", "Information about the NINJAM Server", bot.me.id));
+		if (dpp::run_once<struct register_bot_commands>()) {
+			bot.global_command_create(dpp::slashcommand("info", "Information about the NINJAM Server", bot.me.id));
 			dpp::slashcommand settingscommand("settings", "change settings of the NINJAM bot.", bot.me.id);
-            settingscommand.add_option(
-                dpp::command_option(dpp::co_string, "announcements", "Allow server change messages in channel", true)
-                    .add_choice(dpp::command_option_choice("enable", std::string("announce_enable")))
-                    .add_choice(dpp::command_option_choice("disable", std::string("announce_disable")))
-            );
- 
-            bot.global_command_create(settingscommand);
-        }
+			settingscommand.add_option(dpp::command_option(dpp::co_string, "announcements", "Allow server change messages in channel", true)
+				.add_choice(dpp::command_option_choice("enable", std::string("announce_enable")))
+				.add_choice(dpp::command_option_choice("disable", std::string("announce_disable")))
+			);
+			bot.global_command_create(settingscommand);
+		}
 
-        bot.start_timer([&bot](const dpp::timer& timer){
+		bot.start_timer([&bot](const dpp::timer& timer){
 			bot.request(
 				"http://ninjam.synthseeker.online/util/discord.php?a=users", dpp::m_get, [&bot](const dpp::http_request_completion_t & cc) {
 					ninjam_user_list_get = cc.body;

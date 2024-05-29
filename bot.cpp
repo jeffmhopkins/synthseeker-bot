@@ -8,6 +8,7 @@ long discord_admin_role = 0000000000000000000;
 long discord_admin_id = 0000000000000000000;
 std::string discord_notification_role = "<@&0000000000000000000>";
 std::string discord_token = "TOKEN";   //Discord token
+std::string ninjam_server_password ="PASSWORD";
 
 //Internal Temporary Server Variables
 bool server_needs_announcement = false;
@@ -44,7 +45,7 @@ int main() {
 			event.reply(dpp::message("You do not have proper roler membership for this command.").set_flags(dpp::m_ephemeral));
 		} else {
 			if (event.command.get_command_name() == "info") {
-				event.reply(dpp::message("The Synthseeker NINJAM Server address is ninjam.synthseeker.online:2049").set_flags(dpp::m_ephemeral));
+				event.reply(dpp::message("The Synthseeker NINJAM Server address is ninjam.synthseeker.online:2049, server password is " + ninjam_server_password).set_flags(dpp::m_ephemeral));
 				
 			}
 			if(!admin_allowed) {
@@ -95,7 +96,7 @@ int main() {
 					if(server_needs_announcement) {
 						if(ninjam_user_list.compare("No users") == 0) {
 							if(allow_announcements) {
-								bot.message_create(dpp::message(discord_channel , discord_notification_role + ", Server empty. http://ninjam.synthseeker.online/recordings.php" ));
+								bot.message_create(dpp::message(discord_channel , discord_notification_role + ", Server empty. http://ninjam.synthseeker.online/recordings/" ));
 							}
 							bot.set_presence(dpp::presence(dpp::presence_status::ps_online, dpp::activity_type::at_custom, "Server empty"));
 						} else {

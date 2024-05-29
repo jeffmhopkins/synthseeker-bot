@@ -31,11 +31,11 @@ int main() {
 			command_allowed = true;
 			admin_allowed = true;
 		} else {
-			for (int i=0; i<roles_list.size(); ++i) {
+			for (int i=0; i<roles_list.size(); i++) {
 				if(roles_list[i] == discord_user_role) {
 					command_allowed = true;
 				}
-				if(roles_list[i] == discord_user_role) {
+				if(roles_list[i] == discord_admin_role) {
 					admin_allowed = true;
 					command_allowed = true;
 				}

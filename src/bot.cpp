@@ -3,14 +3,14 @@
 #include "md5.h"
 #include "bot.h"
 
-long discord_channel = 0;
-long discord_patron_role = 0;
-long discord_jammer_role = 0;
-long discord_admin_id = 0;
-std::string discord_notification_role = "<@&0>";
-std::string discord_token = "0";
+long discord_channel = 0;        //Discord channel for #online-jamming
+long discord_patron_role = 0;    //patron role id
+long discord_jammer_role = 0;    //jammer role id 
+long discord_admin_id = 0;       //admin user id
+std::string discord_notification_role = "<@&0>"; // role to ping during notifications
+std::string discord_token = "0"; //main api token for discord
 std::string info_message = "The Synthseeker NINJAM Server address is SERVER, port 2049, password 'PASSWORD'. See https://ninjam.synthseeker.online/connect.html for more information on how to connect.";
-std::string salt = "SALT"
+std::string salt = "SALT" //this is the salt for website authentication (has to match the php)
 
 //Internal Temporary Server Variables
 bool server_needs_announcement = false;

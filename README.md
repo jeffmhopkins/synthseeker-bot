@@ -2,6 +2,7 @@
 Discord Bot for ninjam server, announces when users join and leaves the server. NEEDS updated Channel, Role, and TOKEN values.
 
 Using dpp: https://dpp.dev/install-linux-deb.html
+
 Using md5: https://github.com/stbrumme/hash-library/ (included)
 
 

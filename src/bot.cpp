@@ -1,16 +1,20 @@
-#include <dpp/dpp.h>
+include <dpp/dpp.h>
 
 #include "md5.h"
 #include "bot.h"
 
-long discord_channel = 0;        //Discord channel for #online-jamming
-long discord_patron_role = 0;    //patron role id
-long discord_jammer_role = 0;    //jammer role id 
-long discord_admin_id = 0;       //admin user id
-std::string discord_notification_role = "<@&0>"; // role to ping during notifications
-std::string discord_token = "0"; //main api token for discord
-std::string info_message = "The Synthseeker NINJAM Server address is SERVER, port 2049, password 'PASSWORD'. See https://ninjam.synthseeker.online/connect.html for more information on how to connect.";
-std::string salt = "SALT" //this is the salt for website authentication (has to match the php)
+long discord_channel = 0;
+long discord_patron_role = 0;
+long discord_jammer_role = 0;
+long discord_admin_id = 0;
+std::string discord_notification_role = "<@&0>";
+std::string discord_token = "0";
+std::string salt = "0";
+std::string info_message = "info Message";
+
+std::string alexa_on_url = "http:";
+std::string alexa_off_url = "http:";
+
 
 //Internal Temporary Server Variables
 bool server_needs_announcement = false;
@@ -20,6 +24,8 @@ std::string ninjam_user_list = "";
 std::string ninjam_user_list_get = "";
 int get_status = 0;
 MD5 md5;
+
+bool is_alexa_enabled = false;
 
 
 int main() {
@@ -69,19 +75,31 @@ int main() {
 				} else {
 					event.reply(dpp::message("You do not have proper roles membership for this command. (Need to be a Jammer)").set_flags(dpp::m_ephemeral));
 				}
-			} else if(event.command.get_command_name() == "settings") {
+			} else if(event.command.get_command_name() == "configure_announcements") {
 				if(is_jammer) {
 					std::string announcement_enable = std::get < std::string > (event.get_parameter("announcements"));
 					if(announcement_enable == "announce_enable") {
 						event.reply(dpp::message("Channel announcements are now enabled.").set_flags(dpp::m_ephemeral));
 						allow_announcements = true;
-					}
-					if(announcement_enable == "announce_disable") {
+					} else if(announcement_enable == "announce_disable") {
 						event.reply(dpp::message("Channel announcements are now disabled.").set_flags(dpp::m_ephemeral));
 						allow_announcements = false;
 					}
 				} else {
 					event.reply(dpp::message("You do not have proper roles membership for this command. (Need to be a Jammer)").set_flags(dpp::m_ephemeral));
+				}
+			} else if(event.command.get_command_name() == "configure_home_automation") {
+				if(is_admin) {
+					std::string alexa_enable = std::get < std::string > (event.get_parameter("home_automation"));
+					if(alexa_enable == "alexa_enable") {
+						event.reply(dpp::message("Home automation is now enabled.").set_flags(dpp::m_ephemeral));
+						is_alexa_enabled = true;
+					} else if(alexa_enable == "alexa_disable") {
+						event.reply(dpp::message("Home automation is now disabled.").set_flags(dpp::m_ephemeral));
+						is_alexa_enabled = false;
+					}
+				} else {
+					event.reply(dpp::message("You do not have proper roles membership for this command. (Need to be admin)").set_flags(dpp::m_ephemeral));
 				}
 			} else if(event.command.get_command_name() == "restart_server") {
 				if(is_admin) {
@@ -120,15 +138,22 @@ int main() {
 		}
 	});
 	bot.on_ready([ & bot](const dpp::ready_t & event) {
-		// if (dpp::run_once<struct clear_bot_commands>()) {
-		// bot.global_bulk_command_delete();
-		// }
+		//if (dpp::run_once<struct clear_bot_commands>()) {
+		//bot.global_bulk_command_delete();
+		//}
 		if(dpp::run_once < struct register_bot_commands > ()) {
 			bot.global_command_create(dpp::slashcommand("info", "Information about the NINJAM Server", bot.me.id));
 			bot.global_command_create(dpp::slashcommand("website_authenticate", "Get a cookie that elevates permissions on the website.", bot.me.id));
-			dpp::slashcommand settingscommand("settings", "change settings of the NINJAM bot.", bot.me.id);
-			settingscommand.add_option(dpp::command_option(dpp::co_string, "announcements", "Allow server change messages in channel", true).add_choice(dpp::command_option_choice("enable", std::string("announce_enable"))).add_choice(dpp::command_option_choice("disable", std::string("announce_disable"))));
-			bot.global_command_create(settingscommand);
+			
+			dpp::slashcommand settingsannouncements("configure_announcements", "(jammer) change settings of the NINJAM bot.", bot.me.id);
+			settingsannouncements.add_option(dpp::command_option(dpp::co_string, "announcements", "Allow server change messages in channel", true).add_choice(dpp::command_option_choice("enable", std::string("announce_enable"))).add_choice(dpp::command_option_choice("disable", std::string("announce_disable"))));
+			
+			dpp::slashcommand settingsalexa("configure_home_automation", "(admin) change home automation settings.", bot.me.id);
+			settingsalexa.add_option(dpp::command_option(dpp::co_string, "home_automation", "Change the home automation settings", true).add_choice(dpp::command_option_choice("enable", std::string("alexa_enable"))).add_choice(dpp::command_option_choice("disable", std::string("alexa_disable"))));
+			
+			bot.global_command_create(settingsannouncements);
+			bot.global_command_create(settingsalexa);
+			
 			bot.global_command_create(dpp::slashcommand("restart_server", "admin command to restart the server", bot.me.id));
 			bot.global_command_create(dpp::slashcommand("server_status", "admin command to view stats on the server", bot.me.id));
 			bot.set_presence(dpp::presence(dpp::presence_status::ps_online, dpp::activity_type::at_custom, "Server reboot success"));
@@ -151,12 +176,36 @@ int main() {
 								bot.message_create(dpp::message(discord_channel, discord_notification_role + ", Server empty. https://ninjam.synthseeker.online/recordings/"));
 							}
 						}
+						if(is_alexa_enabled&& !just_booted) {
+							bot.request(
+								alexa_off_url, dpp::m_get, [](const dpp::http_request_completion_t & cc) {
+									std::cout << "I got reply: " << cc.body << " with HTTP status code: " << cc.status << "\n";
+								},
+								"",
+								"application/json",
+								{
+									{"Authorization", "Bearer tokengoeshere"}
+								}
+							);
+						}
 						bot.set_presence(dpp::presence(dpp::presence_status::ps_online, dpp::activity_type::at_custom, "Server empty"));
 					} else {
 						if(allow_announcements) {
 							bot.message_create(dpp::message(discord_channel, discord_notification_role + ", " + ninjam_user_list + " online! https://ninjam.synthseeker.online/live/"));
 						}
 						bot.set_presence(dpp::presence(dpp::presence_status::ps_online, dpp::activity_type::at_custom, ninjam_user_list + " online!"));
+						if(is_alexa_enabled) {
+							bot.request(
+								alexa_on_url, dpp::m_get, [](const dpp::http_request_completion_t & cc) {
+									std::cout << "I got reply: " << cc.body << " with HTTP status code: " << cc.status << "\n";
+								},
+								"",
+								"application/json",
+								{
+									{"Authorization", "Bearer tokengoeshere"}
+								}
+							);
+						}
 					}
 					server_needs_announcement = false;
 					just_booted = false;
